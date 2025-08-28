@@ -1,4 +1,5 @@
 import numpy as np
+from .utils import unbroadcast
 
 
 class Value:
@@ -25,9 +26,9 @@ class Value:
         out = Value(self.data * other.data, (self, other), '*')
         
         def _backward():
-            self.grad += other.data * out.grad
-            other.grad += self.data * out.grad
-        
+            self.grad += unbroadcast(other.data * out.grad, self.data.shape)
+            other.grad += unbroadcast(self.data * out.grad, other.data.shape)
+
         out._backward = _backward
         return out
     
@@ -37,8 +38,8 @@ class Value:
         out = Value(self.data + other.data, (self, other), '+')
 
         def _backward():
-            self.grad += out.grad
-            other.grad += out.grad
+            self.grad += unbroadcast(out.grad, self.data.shape)
+            other.grad += unbroadcast(out.grad, other.data.shape)
 
         out._backward = _backward
         return out
@@ -83,6 +84,18 @@ class Value:
         out._backward = _backward
         return out
 
+    def __getitem__(self, idx):
+        '''Get item at index'''
+        out = Value(self.data[idx], (self,), 'getitem')
+
+        def _backward():
+            grad = np.zeros_like(self.data)
+            np.add.at(grad, idx, out.grad)
+            self.grad += grad
+
+        out._backward = _backward
+        return out
+
     def reshape(self, new_shape):
         '''Reshape value to new shape'''
         out = Value(self.data.reshape(new_shape), (self,), 'reshape')
@@ -102,7 +115,7 @@ class Value:
             inv_axes = np.argsort(axes)
         
         def _backward():
-            self.grad += np.tranpose(out.grad, inv_axes)
+            self.grad += np.transpose(out.grad, inv_axes)
         
         out._backward = _backward
         return out
@@ -112,7 +125,82 @@ class Value:
         '''Transpose the value'''
         return self.transpose()
     
-    
+    def sum(self, axis=None, keepdims=False):
+        '''Sum the value along the specified axis.'''
+        out = Value(self.data.sum(axis=axis, keepdims=keepdims), (self,), 'sum')
+        if isinstance(axis, int):
+            axis = (axis,)
+
+        def _backward():
+            g = out.grad
+            if axis is None:
+                g = np.broadcast_to(g, self.data.shape)
+            else:
+                if not keepdims:
+                    for ax in sorted(axis):
+                        g = np.expand_dims(g, ax)
+                g = np.broadcast_to(g, self.data.shape)
+            self.grad += g
+
+        out._backward = _backward
+        return out
+
+    def mean(self, axis=None, keepdims=False):
+        '''Mean the value along the specified axis.'''
+        out = Value(self.data.mean(axis=axis, keepdims=keepdims), (self,), 'mean')
+        if isinstance(axis, int):
+            axis = (axis,)
+        if axis is None:
+            N = self.data.size
+        else:
+            N = 1
+            for ax in axis:
+                N *= self.data.shape[ax]            
+
+        def _backward():
+            g = out.grad / N
+            if axis is None:
+                g = np.broadcast_to(g, self.data.shape)
+            else:
+                if not keepdims:
+                    for ax in sorted(axis):
+                        g = np.expand_dims(g, ax)
+                g = np.broadcast_to(g, self.data.shape)
+            self.grad += g
+
+        out._backward = _backward
+        return out
+
+    def expand_dims(self, axis):
+        '''Adds a dimension of size 1 along specified axis.'''
+        out = Value(np.expand_dims(self.data, axis), (self,), 'expand_dims')
+        def _backward():
+            g = out.grad
+            g += np.squeeze(g, axis=axis)
+            self.grad += g
+
+        out._backward = _backward
+        return out
+
+    def squeeze(self, axis=None):
+        '''Remove dimensions of size 1 along specified axes.'''
+        out = Value(np.squeeze(self.data, axis=axis), (self,), 'squeeze')
+        if axis is None:
+            removed = tuple(i for i, s in enumerate(self.data.shape) if s == 1)
+        else:
+            if isinstance(axis, int):
+                removed = (axis,)
+            else:
+                removed = tuple(axis)
+        
+        def _backward():
+            g = out.grad
+            for ax in sorted(removed):
+                g = np.expand_dims(g, ax)
+            self.grad += g
+        
+        out._backward = _backward
+        return out
 
     def backward(self):
         if isinstance(self.data, np.ndarray):

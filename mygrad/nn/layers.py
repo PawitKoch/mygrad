@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from mygrad.core.value import Value
 
 
@@ -13,6 +14,26 @@ class Linear:
     
     def parameters(self):
         return [self.W, self.b]
+
+
+class Embedding:
+    def __init__(self, vocab_size, embed_dim):
+        self.W = Value(np.random.randn(vocab_size, embed_dim) * 0.1)
+    
+    def __call__(self, indices: npt.NDArray):
+        indices = np.array(indices, dtype=int)
+        out = Value(self.W.data[indices], (self.W,), 'embedding')
+
+        def _backward():
+            grad_W = np.zeros_like(self.W.data)
+            np.add.at(grad_W, indices, out.grad)
+            self.W.grad += grad_W
+        
+        out._backward = _backward
+        return out
+
+    def parameters(self):
+        return [self.W]
 
 
 def add_bias(x: Value, b: Value):
