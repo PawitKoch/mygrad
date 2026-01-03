@@ -17,3 +17,10 @@ x.grad[:] = 0 # reset gradient
 y = x.sum(axis=1).mean()
 y.backward()
 assert np.allclose(x.grad, np.full_like(x.data, 1/4))
+
+a = Value(np.random.randn(2, 3, 4))
+b = Value(np.random.randn(2, 4, 5))
+c = (a @ b).sum()
+c.backward()
+assert a.grad.shape == a.data.shape
+assert b.grad.shape == b.data.shape

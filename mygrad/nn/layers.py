@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from mygrad.core.value import Value
+from mygrad.core.ops import softmax
 
 
 class Linear:
@@ -10,7 +11,7 @@ class Linear:
     
     def __call__(self, x: Value):
         out = x @ self.W
-        return add_bias(out, self.b)
+        return out + self.b
     
     def parameters(self):
         return [self.W, self.b]
@@ -36,13 +37,30 @@ class Embedding:
         return [self.W]
 
 
-def add_bias(x: Value, b: Value):
-    out = Value(x.data + b.data, (x, b), '+')
+class SelfAttention:
+    def __init__(self, embed_dim):
+        self.embed_dim = embed_dim
+        self.scale = np.sqrt(embed_dim)
 
-    def _backward():
-        x.grad += out.grad
-        # Sum gradients across the batch dimension before adding to bias grad
-        b.grad += out.grad.sum(axis=0, keepdims=True)
+        # projections for Q, K, V
+        self.W_q = Linear(embed_dim, embed_dim)
+        self.W_k = Linear(embed_dim, embed_dim)
+        self.W_v = Linear(embed_dim, embed_dim)
+    
+    def __call__(self, x: Value):
+        """
+        x: (batch_size, seq_length, embed_dim)
+        returns: (batch_size, seq_length, embed_dim)
+        """
+        Q = self.W_q(x)
+        K = self.W_k(x)
+        V = self.W_v(x)
 
-    out._backward = _backward
-    return out
+        scores = (Q @ K.transpose((0, 2, 1))) / self.scale
+        weights = softmax(scores)
+
+        out = weights @ V
+        return out
+
+    def parameters(self):
+        return self.W_q.parameters() + self.W_k.parameters() + self.W_v.parameters()

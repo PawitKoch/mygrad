@@ -13,10 +13,15 @@ This is a personal learning project where I implement my own automatic different
 
 ## How to Use
 1. Clone the repo
-2. Install requirements: `pip install -r requirements.txt`
-3. Run the example scripts:
-	- `python train_xor_mygrad.py` (mygrad)
-	- `python train_xor_jax.py` (JAX)
+2. Install [uv](https://github.com/astral-sh/uv) if you haven't already
+3. Sync dependencies: `uv sync`
+4. Run the example scripts:
+	- `uv run python scripts/train_xor_mygrad.py` (mygrad)
+	- `uv run python scripts/train_xor_jax.py` (JAX)
+   
+   Or activate the virtual environment and run scripts directly:
+	- `source .venv/bin/activate` (on Unix/macOS)
+	- `python scripts/train_xor_mygrad.py`
 
 ## Folder Structure
 - `mygrad/core/` – core autograd engine

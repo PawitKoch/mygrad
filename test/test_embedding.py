@@ -13,6 +13,8 @@ X = np.array([
     [3, 2, 1, 4]
 ])
 
+print("Input shape:", X.shape)
+
 embedding = Embedding(vocab_size, embedding_dim)
 
 # Forward pass

@@ -55,8 +55,10 @@ class Value:
         out = Value(self.data / other.data, (self, other), '/')
 
         def _backward():
-            self.grad += (1.0 / other.data) * out.grad
-            other.grad += (-self.data / (other.data ** 2)) * out.grad
+            self_grad = (1.0 / other.data) * out.grad
+            self.grad += unbroadcast(self_grad, self.data.shape)
+            other_grad = (-self.data / (other.data ** 2)) * out.grad
+            other.grad += unbroadcast(other_grad, other.data.shape)
 
         out._backward = _backward
         return out
@@ -78,8 +80,10 @@ class Value:
         out = Value(self.data @ other.data, (self, other), '@')
 
         def _backward():
-            self.grad += out.grad @ other.data.T
-            other.grad += self.data.T @ out.grad
+            self_grad = out.grad @ np.swapaxes(other.data, -1, -2)
+            self.grad += unbroadcast(self_grad, self.data.shape)
+            other_grad = np.swapaxes(self.data, -1, -2) @ out.grad
+            other.grad += unbroadcast(other_grad, other.data.shape)
 
         out._backward = _backward
         return out
@@ -106,12 +110,13 @@ class Value:
         out._backward = _backward
         return out
 
-    def transpose(self, axes=None):
+    def transpose(self, axes: tuple[int] | list[int] | None = None):
         '''Transpose along specified axes'''
         out = Value(np.transpose(self.data, axes), (self,), 'transpose')
         if axes is None:
             inv_axes = None
         else:
+            axes = list(axes) if isinstance(axes, tuple) else axes
             inv_axes = np.argsort(axes)
         
         def _backward():
