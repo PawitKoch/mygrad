@@ -19,9 +19,9 @@ def classification_metrics(y_true, y_pred):
         f1 = 2 * precision * recall / (precision + recall + eps)
 
         report[c] = {
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
         }
 
     return report

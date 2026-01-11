@@ -14,10 +14,11 @@ authors = [
 license = { text = "MIT" }
 
 dependencies = [
-    "numpy>=2.0",
+    "numpy>=2.4.1",
     "matplotlib>=3.8",
     "jax[cpu]>=0.8.2",
     "optax>=0.1.4",
+    "networkx>=3.6.1"
 ]
 
 [project.optional-dependencies]

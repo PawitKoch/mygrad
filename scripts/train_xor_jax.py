@@ -1,22 +1,27 @@
-import jax 
+import jax
 import jax.numpy as jnp
 from jax import jit, value_and_grad
 
 
 # XOR dataset
-X = jnp.array([
-    [0.0, 0.0],
-    [0.0, 1.0],
-    [1.0, 0.0],
-    [1.0, 1.0],
-])
+X = jnp.array(
+    [
+        [0.0, 0.0],
+        [0.0, 1.0],
+        [1.0, 0.0],
+        [1.0, 1.0],
+    ]
+)
 
-Y = jnp.array([
-    [0.0],
-    [1.0],
-    [1.0],
-    [0.0],
-])
+Y = jnp.array(
+    [
+        [0.0],
+        [1.0],
+        [1.0],
+        [0.0],
+    ]
+)
+
 
 def init_params(key):
     keys = jax.random.split(key, 4)
@@ -27,22 +32,26 @@ def init_params(key):
 
     return (W1, b1, W2, b2)
 
+
 def forward(params, x):
     W1, b1, W2, b2 = params
-    h = jnp.maximum(0, x @ W1 + b1) # ReLU activation
-    out = jax.nn.sigmoid(h @ W2 + b2) # Sigmoid activation
+    h = jnp.maximum(0, x @ W1 + b1)  # ReLU activation
+    out = jax.nn.sigmoid(h @ W2 + b2)  # Sigmoid activation
     return out
+
 
 def bce_loss(params, x, y, eps=1e-8):
     y_pred = forward(params, x)
-    loss = - (y * jnp.log(y_pred + eps) + (1 - y) * jnp.log(1 - y_pred + eps))
+    loss = -(y * jnp.log(y_pred + eps) + (1 - y) * jnp.log(1 - y_pred + eps))
     return jnp.mean(loss)
+
 
 @jit
 def update(params, x, y, lr):
     loss, grads = value_and_grad(bce_loss)(params, x, y)
     new_params = [param - lr * grad for param, grad in zip(params, grads)]
     return new_params, loss
+
 
 def train(params, x, y, epochs=1000, lr=0.25):
     for epoch in range(epochs):

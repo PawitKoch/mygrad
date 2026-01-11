@@ -7,14 +7,16 @@ from mygrad.utils.metrics import classification_metrics
 
 
 # X: 2D inputs
-X = np.array([
-    [0.0, 0.0],
-    [1.0, 0.0],
-    [0.0, 1.0],
-    [1.0, 1.0],
-    [0.5, 0.2],
-    [0.2, 0.8],
-])
+X = np.array(
+    [
+        [0.0, 0.0],
+        [1.0, 0.0],
+        [0.0, 1.0],
+        [1.0, 1.0],
+        [0.5, 0.2],
+        [0.2, 0.8],
+    ]
+)
 
 # Y: class labels (0, 1, or 2)
 Y = np.array([0, 1, 2, 1, 0, 2])
@@ -34,7 +36,7 @@ for epoch in range(epochs):
 
     if epoch % 100 == 0:
         print(f"Epoch {epoch}, Loss: {loss.data:.4f}")
-    
+
 print("\nFinal predictions:")
 y_preds = []
 for x, y in zip(X, Y):
@@ -46,4 +48,6 @@ for x, y in zip(X, Y):
 
 metrics = classification_metrics(Y, y_preds)
 for c, stats in metrics.items():
-    print(f"Class {c}: Precision: {stats['precision']:.3f}, Recall: {stats['recall']:.3f}, F1: {stats['f1']:.3f}")
+    print(
+        f"Class {c}: Precision: {stats['precision']:.3f}, Recall: {stats['recall']:.3f}, F1: {stats['f1']:.3f}"
+    )

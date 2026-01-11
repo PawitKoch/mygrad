@@ -8,10 +8,7 @@ seq_length = 4
 batch_size = 2
 
 # Input indices
-X = np.array([
-    [0, 1, 2, 3],
-    [3, 2, 1, 4]
-])
+X = np.array([[0, 1, 2, 3], [3, 2, 1, 4]])
 
 print("Input shape:", X.shape)
 
