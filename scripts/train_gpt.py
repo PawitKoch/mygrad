@@ -42,13 +42,18 @@ print(f"Vocab size: {vocab_size}, Dataset length: {len(dataset)}")
 batch_size = 32
 seq_len = 64
 model = GPT(
-    vocab_size=vocab_size, embed_dim=64, num_layers=2, num_heads=4, max_seq_len=128
+    vocab_size=vocab_size, embed_dim=192, num_layers=4, num_heads=6, max_seq_len=64
 )
-optimizer = SGD(model.parameters(), lr=0.01)
-num_epochs = 1000
+base_lr = 0.01
+optimizer = SGD(model.parameters(), lr=base_lr)
+num_epochs = 20000
+accum_steps = 4  # gradient accumulation steps
 
 for epoch in range(num_epochs):
     inputs, targets = get_batch(dataset, batch_size, seq_len)
+    optimizer.lr = (
+        base_lr * 0.5 * (1 + np.cos(np.pi * epoch / num_epochs))
+    )  # cosine decay
 
     logits = model(inputs)  # (batch_size, seq_len, vocab_size)
     logits_2d = logits.reshape((batch_size * seq_len, vocab_size))
@@ -57,8 +62,19 @@ for epoch in range(num_epochs):
     loss = cross_entropy_loss(logits_2d, targets_1d)
     loss.backward()
 
-    optimizer.step()
-    optimizer.zero_grad()
+    if (epoch + 1) % accum_steps == 0:
+        optimizer.step()
+        optimizer.zero_grad()
 
     if epoch % 100 == 0:
         print(f"Epoch {epoch}, Loss: {loss.data:.4f}")
+
+# Final step for gradient accumulation
+if (num_epochs) % accum_steps != 0:
+    optimizer.step()
+    optimizer.zero_grad()
+
+print(f"Final Loss: {loss.data:.4f}")
+print("Saving model parameters to .npz")
+params = [p.data for p in model.parameters()]
+np.savez("gpt_shakespeare.npz", *params)

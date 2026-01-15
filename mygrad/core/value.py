@@ -3,7 +3,7 @@ from mygrad.core.utils import unbroadcast
 
 
 class Value:
-    """
+    r"""
     Core autograd engine
 
     The computational graph is a DAG (Directed Acyclic Graph) where:
