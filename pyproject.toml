@@ -18,7 +18,10 @@ dependencies = [
     "matplotlib>=3.8",
     "jax[cpu]>=0.8.2",
     "optax>=0.1.4",
-    "networkx>=3.6.1"
+    "networkx>=3.6.1",
+    "torch>=2.11.0",
+    "torchvision>=0.26.0",
+    "datasets>=5.0.0",
 ]
 
 [project.optional-dependencies]

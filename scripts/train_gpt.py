@@ -67,14 +67,14 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
     if epoch % 100 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.data:.4f}")
+        print(f"Epoch {epoch}, Loss: {loss.data:.4f}, LR: {optimizer.lr:.3f}")
 
 # Final step for gradient accumulation
 if (num_epochs) % accum_steps != 0:
     optimizer.step()
     optimizer.zero_grad()
 
-print(f"Final Loss: {loss.data:.4f}")
+print(f"Final Loss: {loss.data:.4f}, LR: {optimizer.lr:.3f}")
 print("Saving model parameters to .npz")
 params = [p.data for p in model.parameters()]
 np.savez("gpt_shakespeare.npz", *params)

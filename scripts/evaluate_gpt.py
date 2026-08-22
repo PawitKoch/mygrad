@@ -47,13 +47,12 @@ def generate(model, seq_len, start_prompt, max_new_tokens=100):
 
 
 # Init model and load trained parameters
-max_seq_len = 64
 model = GPT(
     vocab_size=vocab_size,
-    embed_dim=128,
+    embed_dim=192,
     num_layers=4,
-    num_heads=4,
-    max_seq_len=max_seq_len,
+    num_heads=6,
+    max_seq_len=64,
 )
 params = np.load("gpt_shakespeare.npz")
 for p, arr in zip(model.parameters(), params.values()):
@@ -62,4 +61,4 @@ for p, arr in zip(model.parameters(), params.values()):
 # Generate text
 print("\n--- Generated Text ---")
 start_prompt = "ROMEO:\n"
-print(generate(model, max_seq_len, start_prompt=start_prompt, max_new_tokens=200))
+print(generate(model, seq_len=64, start_prompt=start_prompt))
